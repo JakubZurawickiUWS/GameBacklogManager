@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
-using GameLibrary;
 using System.ComponentModel;
+using System.Drawing;
+using System.Windows.Forms;
+using GameLibrary;
 
 namespace GameBacklogManager
 {
@@ -13,13 +15,14 @@ namespace GameBacklogManager
         private PlayingWindow playingWindow;
 
         private DataGridView dataGridView;
-        private Button btnAdd, btnEdit, btnDelete, btnStart, btnFilter, btnSort, btnShowAll;
+        private Button btnAdd, btnEdit, btnDelete, btnStart, btnFilter, btnSort, btnShowAll, btnFilterAdvanced, btnShortGames;
+        private ComboBox cmbStatusFilter, cmbPlatformFilter;
 
         public MainForm()
         {
             Text = "Game Backlog Manager";
-            Width = 950;
-            Height = 700;
+            Width = 1000;
+            Height = 750;
 
             InitializeComponents();
 
@@ -47,7 +50,6 @@ namespace GameBacklogManager
             menuStrip.BackColor = Color.WhiteSmoke;
             menuStrip.Font = new Font("Segoe UI", 10);
             menuStrip.RenderMode = ToolStripRenderMode.System;
-
 
             dataGridView = new DataGridView
             {
@@ -82,13 +84,47 @@ namespace GameBacklogManager
             btnFilter = CreateStyledButton("Filtruj 8+", BtnFilter_Click);
             btnSort = CreateStyledButton("Sortuj A-Z", BtnSort_Click);
             btnShowAll = CreateStyledButton("Pokaż wszystkie", (s, e) => ShowAllGames());
+            btnShortGames = CreateStyledButton("Tylko krótkie gry", (s, e) =>
+            {
+                var filtered = gameManager.FilterGames(GameFilters.ShortGames);
+                bindingList.Clear();
+                foreach (var g in filtered)
+                    bindingList.Add(g);
+            });
+
+            cmbStatusFilter = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Width = 150
+            };
+            cmbStatusFilter.Items.AddRange(Enum.GetNames(typeof(GameStatus)));
+            cmbStatusFilter.SelectedIndex = -1;
+
+            cmbPlatformFilter = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Width = 150
+            };
+            cmbPlatformFilter.Items.AddRange(new string[] { "PC", "PlayStation", "Xbox", "Switch" });
+            cmbPlatformFilter.SelectedIndex = -1;
+
+            btnFilterAdvanced = CreateStyledButton("Filtruj status/platformę", (s, e) =>
+            {
+                var filtered = gameManager.FilterGames(g =>
+                    (cmbStatusFilter.SelectedIndex == -1 || g.Status.ToString() == cmbStatusFilter.SelectedItem.ToString()) &&
+                    (cmbPlatformFilter.SelectedIndex == -1 || g.Platform == cmbPlatformFilter.SelectedItem.ToString()));
+
+                bindingList.Clear();
+                foreach (var g in filtered)
+                    bindingList.Add(g);
+            });
 
             var panel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Bottom,
-                Height = 100,
+                Height = 130,
                 FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false,
+                WrapContents = true,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Padding = new Padding(10)
@@ -96,7 +132,10 @@ namespace GameBacklogManager
 
             panel.Controls.AddRange(new Control[]
             {
-                btnAdd, btnEdit, btnDelete, btnStart, btnFilter, btnSort, btnShowAll
+                btnAdd, btnEdit, btnDelete, btnStart,
+                btnFilter, btnSort, btnShowAll,
+                cmbStatusFilter, cmbPlatformFilter,
+                btnFilterAdvanced, btnShortGames
             });
 
             Controls.Add(dataGridView);
