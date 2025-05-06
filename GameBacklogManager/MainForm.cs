@@ -1,7 +1,5 @@
 ﻿using System.Text.Json;
 using System.ComponentModel;
-using System.Drawing;
-using System.Windows.Forms;
 using GameLibrary;
 
 namespace GameBacklogManager
